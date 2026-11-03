@@ -1,0 +1,114 @@
+<div class="page-container">
+  <div class="mb-3">
+    <a routerLink="/policies" class="back-link">
+      <span class="material-icons">arrow_back</span> Back to Catalog
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading policy specification...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (policy) {
+    <div class="policy-detail-layout">
+      <!-- Main Content Card -->
+      <div class="main-card app-card">
+        <div class="card-hero">
+          <div class="badges-row">
+            <span class="category-badge cat-{{ policy.category }}">{{ policy.category }} INSURANCE</span>
+            <span class="policy-badge">{{ policy.policyNumber }}</span>
+          </div>
+          <h1>{{ policy.name }}</h1>
+          <p class="lead-desc">{{ policy.description }}</p>
+        </div>
+
+        <div class="detail-section">
+          <h3><span class="material-icons">verified</span> Eligibility Requirements</h3>
+          <p>{{ policy.eligibility }}</p>
+        </div>
+
+        <div class="detail-section">
+          <h3><span class="material-icons">gavel</span> Terms and Conditions</h3>
+          <p class="terms-text">{{ policy.termsAndConditions }}</p>
+        </div>
+
+        <div class="detail-section">
+          <h3><span class="material-icons">checklist</span> Key Policy Features</h3>
+          <div class="features-grid">
+            <div class="feat-item">
+              <span class="material-icons">lock_clock</span>
+              <div>
+                <strong>30-Day Waiting Period</strong>
+                <p>Standard grace & regulatory screening window.</p>
+              </div>
+            </div>
+            <div class="feat-item">
+              <span class="material-icons">credit_card</span>
+              <div>
+                <strong>Cashless Settlement</strong>
+                <p>Direct provider reimbursement on approved claims.</p>
+              </div>
+            </div>
+            <div class="feat-item">
+              <span class="material-icons">autorenew</span>
+              <div>
+                <strong>Guaranteed Renewable</strong>
+                <p>Seamless annual rollover with zero extra medicals.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financials Sidebar Card -->
+      <div class="summary-card app-card">
+        <h3>Plan Financials</h3>
+
+        <div class="price-highlight">
+          <div class="lbl">Annual Premium</div>
+          <div class="val">₹{{ policy.premiumAmount | number:'1.0-0' }}</div>
+          <div class="sub">Taxes and cess included</div>
+        </div>
+
+        <div class="summary-list">
+          <div class="sum-row">
+            <span>Sum Insured (Coverage)</span>
+            <strong>₹{{ policy.coverageAmount | number:'1.0-0' }}</strong>
+          </div>
+          <div class="sum-row">
+            <span>Policy Duration</span>
+            <strong>{{ policy.durationMonths }} Months</strong>
+          </div>
+          <div class="sum-row">
+            <span>Category</span>
+            <strong>{{ policy.category }}</strong>
+          </div>
+          <div class="sum-row">
+            <span>Status</span>
+            <span class="status-badge status-ACTIVE">Active Plan</span>
+          </div>
+        </div>
+
+        <div class="sidebar-action">
+          @if (authService.isCustomer()) {
+            <a [routerLink]="['/policies', policy.id, 'apply']" class="btn btn-primary btn-block">
+              <span class="material-icons">how_to_reg</span> Apply for this Policy
+            </a>
+          } @else if (!authService.isAuthenticated()) {
+            <a routerLink="/auth/login" class="btn btn-primary btn-block">
+              <span class="material-icons">login</span> Sign In to Apply
+            </a>
+          } @else {
+            <div class="admin-notice">
+              Logged in as {{ authService.currentUserRole() }}.
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,167 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Audit & Analytics Reports</h1>
+      <p>Multi-dimensional filtering, financial aggregations, and raw CSV data extraction.</p>
+    </div>
+    @if (authService.isAdmin()) {
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="exportCSV()" [disabled]="isExporting">
+          <span class="material-icons">file_download</span>
+          @if (isExporting) { Generating CSV... } @else { Export to CSV }
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Filter Card -->
+  <div class="app-card filter-card mb-4">
+    <div class="filter-grid">
+      <div class="form-group mb-0">
+        <label>Start Date</label>
+        <input type="date" class="form-control" [(ngModel)]="filter.startDate" (change)="onFilterChange()" />
+      </div>
+
+      <div class="form-group mb-0">
+        <label>End Date</label>
+        <input type="date" class="form-control" [(ngModel)]="filter.endDate" (change)="onFilterChange()" />
+      </div>
+
+      <div class="form-group mb-0">
+        <label>Category</label>
+        <select class="form-control" [(ngModel)]="filter.category" (change)="onFilterChange()">
+          <option value="">All Categories</option>
+          @for (c of categories; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label>Status</label>
+        <select class="form-control" [(ngModel)]="filter.status" (change)="onFilterChange()">
+          <option value="">All Statuses</option>
+          @for (s of statuses; track s) {
+            <option [value]="s">{{ s.replace('_', ' ') }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label>Assigned Officer</label>
+        <select class="form-control" [(ngModel)]="filter.officerId" (change)="onFilterChange()">
+          <option value="">All Officers</option>
+          @for (o of officers; track o.id) {
+            <option [value]="o.id">{{ o.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions-col">
+        <button class="btn btn-secondary btn-sm" (click)="resetFilter()">
+          <span class="material-icons">restart_alt</span> Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Metric Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-info">
+        <div class="stat-label">Filtered Records</div>
+        <div class="stat-value">{{ summary.totalRecords }}</div>
+        <div class="stat-subtext">Claims found</div>
+      </div>
+      <div class="stat-icon blue"><span class="material-icons">receipt</span></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <div class="stat-label">Total Claimed Value</div>
+        <div class="stat-value">₹{{ summary.totalClaimedAmount | number:'1.0-0' }}</div>
+        <div class="stat-subtext">Gross claim demand</div>
+      </div>
+      <div class="stat-icon purple"><span class="material-icons">attach_money</span></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <div class="stat-label">Approved Value</div>
+        <div class="stat-value">₹{{ summary.totalApprovedAmount | number:'1.0-0' }}</div>
+        <div class="stat-subtext">Validated sum</div>
+      </div>
+      <div class="stat-icon amber"><span class="material-icons">verified</span></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-info">
+        <div class="stat-label">Total Disbursed</div>
+        <div class="stat-value">₹{{ summary.totalSettledAmount | number:'1.0-0' }}</div>
+        <div class="stat-subtext">Settled payouts</div>
+      </div>
+      <div class="stat-icon green"><span class="material-icons">check_circle</span></div>
+    </div>
+  </div>
+
+  <!-- Results Table -->
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Computing report parameters...</p>
+    </div>
+  } @else if (claims.length === 0) {
+    <div class="empty-state app-card">
+      <span class="material-icons empty-icon">filter_alt_off</span>
+      <h3>No claims matching report criteria</h3>
+      <p>Adjust your date intervals or category selections to view data.</p>
+    </div>
+  } @else {
+    <div class="table-responsive app-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Claim No</th>
+            <th>Customer</th>
+            <th>Policy & Category</th>
+            <th>Incident Date</th>
+            <th>Claimed</th>
+            <th>Approved</th>
+            <th>Status</th>
+            <th>Officer</th>
+            <th>Settled Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of claims; track c.id) {
+            <tr>
+              <td><strong>{{ c.claimNumber }}</strong></td>
+              <td>{{ c.customer?.name }}</td>
+              <td>
+                <div>{{ c.policy?.name }}</div>
+                <span class="category-badge cat-{{ c.claimCategory }}">{{ c.claimCategory }}</span>
+              </td>
+              <td>{{ c.incidentDate | date:'shortDate' }}</td>
+              <td>₹{{ c.claimAmount | number:'1.0-0' }}</td>
+              <td>
+                @if (c.approvedAmount) {
+                  <span class="text-success">₹{{ c.approvedAmount | number:'1.0-0' }}</span>
+                } @else {
+                  —
+                }
+              </td>
+              <td><span class="status-badge status-{{ c.status }}">{{ c.status.replace('_', ' ') }}</span></td>
+              <td>{{ c.assignedOfficer?.name || 'Unassigned' }}</td>
+              <td>{{ c.settledAt ? (c.settledAt | date:'shortDate') : '—' }}</td>
+              <td>
+                <a [routerLink]="['/claims', c.id]" class="btn btn-secondary btn-sm">Inspect</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,81 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>My Active Insurance Policies</h1>
+      <p>Manage your issued insurance plans, view coverage durations, and initiate claims.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/policies" class="btn btn-primary">
+        <span class="material-icons">add</span> Apply for Another Policy
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Fetching your insurance portfolio...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (policies.length === 0) {
+    <div class="empty-state app-card">
+      <span class="material-icons empty-icon">folder_off</span>
+      <h3>No active policies found</h3>
+      <p>You have not been issued any active insurance policies yet. Browse our plans and submit your first application.</p>
+      <a routerLink="/policies" class="btn btn-primary">Browse Policies Catalog</a>
+    </div>
+  } @else {
+    <div class="my-policies-grid">
+      @for (cp of policies; track cp.id) {
+        <div class="app-card policy-item-card">
+          <div class="card-top">
+            <span class="category-badge cat-{{ cp.policy?.category }}">{{ cp.policy?.category }}</span>
+            <span class="status-badge status-{{ cp.status }}">{{ cp.status }}</span>
+          </div>
+
+          <div class="policy-header">
+            <h3>{{ cp.policy?.name }}</h3>
+            <div class="policy-num">Policy No: <strong>{{ cp.policyNumber }}</strong></div>
+          </div>
+
+          <div class="dates-bar">
+            <div class="date-item">
+              <span class="d-lbl">Start Date</span>
+              <span class="d-val">{{ cp.startDate | date:'mediumDate' }}</span>
+            </div>
+            <span class="material-icons date-arrow">arrow_forward</span>
+            <div class="date-item">
+              <span class="d-lbl">Expiry Date</span>
+              <span class="d-val">{{ cp.endDate | date:'mediumDate' }}</span>
+            </div>
+          </div>
+
+          <div class="coverage-box">
+            <div class="c-item">
+              <span class="c-lbl">Coverage Limit</span>
+              <span class="c-val highlight">₹{{ cp.coverageAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="c-divider"></div>
+            <div class="c-item">
+              <span class="c-lbl">Premium Paid</span>
+              <span class="c-val">₹{{ cp.premiumPaid | number:'1.0-0' }}</span>
+            </div>
+            <div class="c-divider"></div>
+            <div class="c-item">
+              <span class="c-lbl">Claims Filed</span>
+              <span class="c-val">{{ cp.claims?.length || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="policy-card-actions">
+            <a [routerLink]="['/claims/submit']" [queryParams]="{ customerPolicyId: cp.id }" class="btn btn-primary btn-block">
+              <span class="material-icons">post_add</span> File Claim against this Policy
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+

@@ -1,0 +1,24 @@
+<aside class="app-sidebar" [class.collapsed]="!isOpen">
+  <div class="sidebar-menu-wrapper">
+    <div class="sidebar-section-title">
+      <span>{{ role }} PORTAL</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.route.includes('dashboard') }" class="nav-item">
+          <span class="material-icons nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="academic-note">
+      <div class="academic-title">Group 20 Academic Project</div>
+      <div class="academic-desc">Angular 19 + Express + SQLite</div>
+    </div>
+  </div>
+</aside>
+

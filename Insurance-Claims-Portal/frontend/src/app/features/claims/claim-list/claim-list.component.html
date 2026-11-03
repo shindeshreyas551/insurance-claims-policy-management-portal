@@ -1,0 +1,139 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Insurance Claims Management</h1>
+      <p>
+        @if (authService.isCustomer()) {
+          Track your submitted reimbursement claims and audit lifecycle.
+        } @else if (authService.isOfficer()) {
+          Assess and process claims in your verification pipeline.
+        } @else {
+          System-wide claims monitoring, officer assignment, and settlement authorization.
+        }
+      </p>
+    </div>
+    @if (authService.isCustomer()) {
+      <div class="header-actions">
+        <a routerLink="/claims/submit" class="btn btn-primary">
+          <span class="material-icons">add_circle</span> File New Claim
+        </a>
+      </div>
+    }
+  </div>
+
+  <!-- Status Tabs & Search -->
+  <div class="filter-bar">
+    <div class="status-pills">
+      @for (tab of statusTabs; track tab.label) {
+        <button
+          type="button"
+          class="status-pill"
+          [class.active]="selectedStatus === tab.value"
+          (click)="selectStatus(tab.value)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search claim no, customer name..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading claims registry...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (filteredClaims.length === 0) {
+    <div class="empty-state app-card">
+      <span class="material-icons empty-icon">rule_folder</span>
+      <h3>No matching claims found</h3>
+      <p>There are no insurance claims matching your currently selected filter or search term.</p>
+      <button class="btn btn-secondary btn-sm" (click)="selectedStatus = ''; searchTerm = ''; applyFilters()">
+        Reset Filters
+      </button>
+    </div>
+  } @else {
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Claim No</th>
+            @if (!authService.isCustomer()) {
+              <th>Customer</th>
+            }
+            <th>Policy & Category</th>
+            <th>Incident Date</th>
+            <th>Claim Amount</th>
+            <th>Approved Amount</th>
+            <th>Status</th>
+            <th>Assigned Officer</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of filteredClaims; track c.id) {
+            <tr>
+              <td>
+                <strong>{{ c.claimNumber }}</strong>
+                <div class="submission-date text-muted">{{ c.createdAt | date:'shortDate' }}</div>
+              </td>
+              @if (!authService.isCustomer()) {
+                <td>
+                  <strong>{{ c.customer?.name }}</strong>
+                  <div class="text-muted">{{ c.customer?.email }}</div>
+                </td>
+              }
+              <td>
+                <div class="policy-name-cell">{{ c.policy?.name }}</div>
+                <span class="category-badge cat-{{ c.claimCategory }}">{{ c.claimCategory }}</span>
+              </td>
+              <td>{{ c.incidentDate | date:'mediumDate' }}</td>
+              <td><strong>₹{{ c.claimAmount | number:'1.0-0' }}</strong></td>
+              <td>
+                @if (c.approvedAmount) {
+                  <span class="text-success font-bold">₹{{ c.approvedAmount | number:'1.0-0' }}</span>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="status-badge status-{{ c.status }}">
+                  {{ c.status.replace('_', ' ') }}
+                </span>
+              </td>
+              <td>
+                @if (c.assignedOfficer) {
+                  <span class="officer-name">{{ c.assignedOfficer.name }}</span>
+                } @else {
+                  <span class="unassigned-badge">Unassigned</span>
+                }
+              </td>
+              <td>
+                <a [routerLink]="['/claims', c.id]" class="btn btn-secondary btn-sm">
+                  <span class="material-icons">visibility</span>
+                  @if (authService.isOfficer() && c.status === 'UNDER_REVIEW') {
+                    Review
+                  } @else {
+                    Details
+                  }
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+

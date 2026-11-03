@@ -1,0 +1,21 @@
+.filter-card {
+  padding: 1.25rem;
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) auto;
+    gap: 1rem;
+    align-items: flex-end;
+
+    .mb-0 { margin-bottom: 0; }
+
+    .filter-actions-col {
+      display: flex;
+      gap: 0.5rem;
+      padding-bottom: 2px;
+    }
+  }
+}
+
+.text-success { color: #10b981; font-weight: 700; }
+

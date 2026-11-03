@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OFFICER
+  CUSTOMER
+}
+
+enum PolicyCategory {
+  HEALTH
+  LIFE
+  VEHICLE
+  HOME
+  TRAVEL
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CustomerPolicyStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_DOCS_REQUIRED
+  APPROVED
+  REJECTED
+  SETTLED
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  phone        String?
+  address      String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  applications         PolicyApplication[]  @relation("CustomerApplications")
+  reviewedApplications PolicyApplication[]  @relation("ReviewedApplications")
+  customerPolicies     CustomerPolicy[]     @relation("CustomerActivePolicies")
+  claims               Claim[]              @relation("CustomerClaims")
+  assignedClaims       Claim[]              @relation("AssignedOfficerClaims")
+  statusHistoryChanges ClaimStatusHistory[] @relation("UserStatusChanges")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Policy {
+  id                 String         @id @default(uuid())
+  policyNumber       String         @unique
+  name               String
+  category           PolicyCategory
+  description        String
+  premiumAmount      Float
+  coverageAmount     Float
+  durationMonths     Int            @default(12)
+  eligibility        String
+  termsAndConditions String
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  // Relationships
+  applications     PolicyApplication[]
+  customerPolicies CustomerPolicy[]
+  claims           Claim[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model PolicyApplication {
+  id                 String            @id @default(uuid())
+  applicationNumber  String            @unique
+  customerId         String
+  policyId           String
+  status             ApplicationStatus @default(PENDING)
+  nomineeName        String
+  nomineeRelation    String
+  annualIncome       Float?
+  existingConditions String?
+  remarks            String?
+  reviewedById       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  // Relationships
+  customer       User            @relation("CustomerApplications", fields: [customerId], references: [id], onDelete: Cascade)
+  policy         Policy          @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  reviewedBy     User?           @relation("ReviewedApplications", fields: [reviewedById], references: [id], onDelete: SetNull)
+  customerPolicy CustomerPolicy?
+
+  @@index([customerId])
+  @@index([policyId])
+  @@index([status])
+}
+
+model CustomerPolicy {
+  id             String               @id @default(uuid())
+  policyNumber   String               @unique
+  customerId     String
+  policyId       String
+  applicationId  String?              @unique
+  startDate      DateTime
+  endDate        DateTime
+  premiumPaid    Float
+  coverageAmount Float
+  status         CustomerPolicyStatus @default(ACTIVE)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  // Relationships
+  customer    User               @relation("CustomerActivePolicies", fields: [customerId], references: [id], onDelete: Cascade)
+  policy      Policy             @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  application PolicyApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  claims      Claim[]
+
+  @@index([customerId])
+  @@index([policyId])
+  @@index([status])
+}
+
+model Claim {
+  id                String      @id @default(uuid())
+  claimNumber       String      @unique
+  customerId        String
+  customerPolicyId  String
+  policyId          String
+  incidentDate      DateTime
+  claimCategory     String
+  claimAmount       Float
+  approvedAmount    Float?
+  description       String
+  status            ClaimStatus @default(SUBMITTED)
+  assignedOfficerId String?
+  officerRemarks    String?
+  rejectionReason   String?
+  settledAt         DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relationships
+  customer        User                 @relation("CustomerClaims", fields: [customerId], references: [id], onDelete: Cascade)
+  customerPolicy  CustomerPolicy       @relation(fields: [customerPolicyId], references: [id], onDelete: Cascade)
+  policy          Policy               @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  assignedOfficer User?                @relation("AssignedOfficerClaims", fields: [assignedOfficerId], references: [id], onDelete: SetNull)
+  documents       ClaimDocument[]
+  statusHistory   ClaimStatusHistory[]
+
+  @@index([customerId])
+  @@index([customerPolicyId])
+  @@index([assignedOfficerId])
+  @@index([status])
+}
+
+model ClaimDocument {
+  id           String   @id @default(uuid())
+  claimId      String
+  fileName     String
+  originalName String
+  filePath     String
+  mimeType     String
+  fileSize     Int
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+
+  // Relationships
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+}
+
+model ClaimStatusHistory {
+  id             String      @id @default(uuid())
+  claimId        String
+  previousStatus ClaimStatus
+  newStatus      ClaimStatus
+  changedById    String
+  remarks        String?
+  createdAt      DateTime    @default(now())
+
+  // Relationships
+  claim     Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  changedBy User  @relation("UserStatusChanges", fields: [changedById], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([changedById])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity])
+}
+

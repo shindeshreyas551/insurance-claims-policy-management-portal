@@ -1,0 +1,198 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>File an Insurance Claim</h1>
+      <p>Submit incident details and supporting documentation for claims assessment.</p>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Validating policy eligibility...</p>
+    </div>
+  } @else if (activePolicies.length === 0) {
+    <div class="empty-state app-card">
+      <span class="material-icons empty-icon">warning_amber</span>
+      <h3>No Active Policies Eligible for Claim</h3>
+      <p>Claims can only be filed against active policies. Please ensure your policy application is approved.</p>
+      <a routerLink="/policies" class="btn btn-primary">Browse & Apply Policies</a>
+    </div>
+  } @else {
+    <div class="claim-submit-layout">
+      <!-- Main Claim Form -->
+      <div class="app-card form-card">
+        @if (successMessage) {
+          <div class="alert alert-success">
+            <span class="material-icons">check_circle</span>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="alert alert-danger">
+            <span class="material-icons">error_outline</span>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <form [formGroup]="claimForm" (ngSubmit)="onSubmit()">
+          <!-- Select Policy -->
+          <div class="form-group">
+            <label for="policySelect">Select Active Policy *</label>
+            <select
+              id="policySelect"
+              class="form-control"
+              formControlName="customerPolicyId"
+              (change)="onPolicyChange(claimForm.value.customerPolicyId)"
+            >
+              @for (p of activePolicies; track p.id) {
+                <option [value]="p.id">
+                  {{ p.policy?.name }} — [{{ p.policyNumber }}] (Max Cover: ₹{{ p.coverageAmount | number:'1.0-0' }})
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-grid">
+            <!-- Incident Date -->
+            <div class="form-group">
+              <label for="incidentDate">Incident Date *</label>
+              <input
+                id="incidentDate"
+                type="date"
+                class="form-control"
+                formControlName="incidentDate"
+              />
+              @if (claimForm.get('incidentDate')?.touched && claimForm.get('incidentDate')?.errors?.['required']) {
+                <div class="form-error">Incident date is required.</div>
+              }
+            </div>
+
+            <!-- Claim Amount -->
+            <div class="form-group">
+              <label for="claimAmount">Claim Amount (₹) *</label>
+              <input
+                id="claimAmount"
+                type="number"
+                class="form-control"
+                placeholder="e.g. 45000"
+                formControlName="claimAmount"
+              />
+              @if (claimForm.get('claimAmount')?.touched && claimForm.get('claimAmount')?.errors?.['required']) {
+                <div class="form-error">Claim amount is required.</div>
+              }
+              @if (claimForm.get('claimAmount')?.touched && claimForm.get('claimAmount')?.errors?.['min']) {
+                <div class="form-error">Claim amount must be greater than zero.</div>
+              }
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Incident Description & Narrative *</label>
+            <textarea
+              id="description"
+              rows="4"
+              class="form-control"
+              placeholder="Provide a detailed account of the event (hospitalization diagnosis, collision location, property loss particulars, etc.)"
+              formControlName="description"
+            ></textarea>
+            @if (claimForm.get('description')?.touched && claimForm.get('description')?.errors?.['minlength']) {
+              <div class="form-error">Description must be at least 15 characters long.</div>
+            }
+          </div>
+
+          <!-- Document Upload -->
+          <div class="form-group">
+            <label>Upload Supporting Documents (Invoices, Discharge Summary, FIR, Photos)</label>
+            <div class="upload-dropzone">
+              <input
+                type="file"
+                id="fileInput"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png"
+                (change)="onFileSelected($event)"
+              />
+              <label for="fileInput" class="dropzone-label">
+                <span class="material-icons upload-icon">cloud_upload</span>
+                <span class="drop-text">Click or drag files here to upload</span>
+                <span class="drop-hint">Supported formats: PDF, JPG, JPEG, PNG (Max 5MB each, up to 5 files)</span>
+              </label>
+            </div>
+
+            @if (uploadedFiles.length > 0) {
+              <div class="uploaded-files-list">
+                @for (file of uploadedFiles; track file.name; let i = $index) {
+                  <div class="file-chip">
+                    <span class="material-icons file-icon">
+                      {{ file.name.endsWith('.pdf') ? 'picture_as_pdf' : 'image' }}
+                    </span>
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">({{ (file.size / 1024) | number:'1.0-0' }} KB)</span>
+                    <button type="button" class="remove-btn" (click)="removeFile(i)">
+                      <span class="material-icons">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-actions">
+            <a routerLink="/customer/dashboard" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+              @if (isSubmitting) {
+                <span class="spinner-small"></span> Registering Claim...
+              } @else {
+                <span class="material-icons">send</span> Submit Claim for Review
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Policy Info Card -->
+      <div class="app-card info-card">
+        <h3>Policy Coverage Reference</h3>
+        @if (selectedPolicy) {
+          <div class="info-block">
+            <span class="category-badge cat-{{ selectedPolicy.policy?.category }} mb-2">
+              {{ selectedPolicy.policy?.category }}
+            </span>
+            <div class="info-title">{{ selectedPolicy.policy?.name }}</div>
+            <div class="info-num">{{ selectedPolicy.policyNumber }}</div>
+
+            <div class="info-specs">
+              <div class="spec-row">
+                <span>Coverage Limit</span>
+                <strong class="highlight">₹{{ selectedPolicy.coverageAmount | number:'1.0-0' }}</strong>
+              </div>
+              <div class="spec-row">
+                <span>Effective Inception</span>
+                <strong>{{ selectedPolicy.startDate | date:'mediumDate' }}</strong>
+              </div>
+              <div class="spec-row">
+                <span>Expiration Date</span>
+                <strong>{{ selectedPolicy.endDate | date:'mediumDate' }}</strong>
+              </div>
+            </div>
+
+            <div class="guidance-box">
+              <span class="material-icons">rule</span>
+              <div>
+                <strong>Claim Validation Rules:</strong>
+                <ul>
+                  <li>Claim amount must not exceed coverage limit.</li>
+                  <li>Incident date must fall within active coverage window.</li>
+                  <li>Original itemized bills must be uploaded.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,169 @@
+<div class="landing-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="material-icons">verified_user</span>
+        Next-Generation Academic Insurance Platform
+      </div>
+      <h1 class="hero-title">
+        Enterprise Insurance Claims & <br>
+        <span class="highlight">Policy Management Portal</span>
+      </h1>
+      <p class="hero-subtitle">
+        A unified digital ecosystem connecting Customers, Insurance Officers, and Administrators.
+        Empowering end-to-end policy lifecycles, rigorous document audits, and automated claims settlement.
+      </p>
+
+      <div class="hero-actions">
+        @if (authService.isAuthenticated()) {
+          <a routerLink="/customer/dashboard" class="btn btn-primary">
+            <span class="material-icons">dashboard</span> Go to Dashboard
+          </a>
+        } @else {
+          <a routerLink="/auth/register" class="btn btn-primary">
+            <span class="material-icons">person_add</span> Get Started (Customer)
+          </a>
+          <a routerLink="/auth/login" class="btn btn-secondary">
+            <span class="material-icons">login</span> Sign In to Portal
+          </a>
+        }
+        <a routerLink="/policies" class="btn btn-secondary">
+          <span class="material-icons">search</span> Browse Policies
+        </a>
+      </div>
+
+      <!-- Quick Stats Band -->
+      <div class="hero-stats">
+        <div class="h-stat">
+          <div class="val">5</div>
+          <div class="lbl">Insurance Categories</div>
+        </div>
+        <div class="h-stat-divider"></div>
+        <div class="h-stat">
+          <div class="val">100%</div>
+          <div class="lbl">Paperless Workflow</div>
+        </div>
+        <div class="h-stat-divider"></div>
+        <div class="h-stat">
+          <div class="val">6-Stage</div>
+          <div class="lbl">Audited Claim Lifecycle</div>
+        </div>
+        <div class="h-stat-divider"></div>
+        <div class="h-stat">
+          <div class="val">Zero</div>
+          <div class="lbl">Manual Friction</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Comprehensive Insurance Coverage</h2>
+        <p>Explore protection portfolios tailored to safeguard health, life, assets, and journeys.</p>
+      </div>
+
+      <div class="categories-grid">
+        @for (cat of categories; track cat.name) {
+          <div class="category-card">
+            <div class="cat-icon-box">
+              <span class="material-icons">{{ cat.icon }}</span>
+            </div>
+            <h3>{{ cat.name }}</h3>
+            <p>{{ cat.desc }}</p>
+            <div class="cat-footer">
+              <span class="cat-count">{{ cat.count }}</span>
+              <a routerLink="/policies" class="cat-link">View Plans &rarr;</a>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Workflow Section -->
+  <section class="workflow-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Transparent Claims & Policy Lifecycle</h2>
+        <p>From initial application to verified claim reimbursement in 5 clear stages.</p>
+      </div>
+
+      <div class="workflow-grid">
+        @for (item of workflowSteps; track item.step) {
+          <div class="workflow-card">
+            <div class="step-number">{{ item.step }}</div>
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Role Showcase -->
+  <section class="roles-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Engineered for 3 Specialized Roles</h2>
+        <p>Role-based access control guaranteeing security and operational segregation.</p>
+      </div>
+
+      <div class="roles-grid">
+        <div class="role-card">
+          <div class="role-badge role-CUSTOMER">Customer</div>
+          <h3>Policyholder Experience</h3>
+          <ul>
+            <li><span class="material-icons">check</span> Browse and filter policies by category</li>
+            <li><span class="material-icons">check</span> Apply online with nominee specifications</li>
+            <li><span class="material-icons">check</span> Submit claims with file upload & tracking</li>
+            <li><span class="material-icons">check</span> Instant notifications upon status updates</li>
+          </ul>
+        </div>
+
+        <div class="role-card highlight-card">
+          <div class="role-badge role-OFFICER">Insurance Officer</div>
+          <h3>Claims Assessment Desk</h3>
+          <ul>
+            <li><span class="material-icons">check</span> Assigned claims verification workbench</li>
+            <li><span class="material-icons">check</span> Inspect uploaded medical & repair documents</li>
+            <li><span class="material-icons">check</span> Request additional proofs with remarks</li>
+            <li><span class="material-icons">check</span> Recommend approvals or documented rejections</li>
+          </ul>
+        </div>
+
+        <div class="role-card">
+          <div class="role-badge role-ADMIN">Administrator</div>
+          <h3>System Governance & Analytics</h3>
+          <ul>
+            <li><span class="material-icons">check</span> Dynamic Chart.js dashboard analytics</li>
+            <li><span class="material-icons">check</span> Review applications & issue customer policies</li>
+            <li><span class="material-icons">check</span> Assign claims & authorize final settlements</li>
+            <li><span class="material-icons">check</span> One-click CSV export and compliance logs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="f-logo">
+          <span class="material-icons">shield</span> SecureGuard Portal
+        </div>
+        <p>Individual Academic Assessment Project (Group 20) — Developed with Angular 19, Node.js, Express, and Prisma SQLite.</p>
+      </div>
+      <div class="footer-links">
+        <a routerLink="/policies">Policies</a>
+        <a routerLink="/auth/login">Login</a>
+        <a routerLink="/auth/register">Register</a>
+      </div>
+    </div>
+  </footer>
+</div>
+

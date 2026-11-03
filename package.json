@@ -1,0 +1,14 @@
+{
+  "name": "insurance-claims-portal-workspace",
+  "version": "1.0.0",
+  "description": "Insurance Claims & Policy Management Portal - Group 20 Individual Submission",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node start.js",
+    "backend": "cd Insurance-Claims-Portal/backend && npm start",
+    "frontend": "cd Insurance-Claims-Portal/frontend && npm start",
+    "build": "node build-all.js",
+    "test": "cd Insurance-Claims-Portal/backend && npm test"
+  }
+}
+

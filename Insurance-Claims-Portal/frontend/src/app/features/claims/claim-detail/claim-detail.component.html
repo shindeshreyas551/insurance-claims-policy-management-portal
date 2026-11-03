@@ -1,0 +1,335 @@
+<div class="page-container">
+  <div class="mb-3">
+    <a routerLink="/claims" class="back-link">
+      <span class="material-icons">arrow_back</span> Back to Claims Listing
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading claim dossier & audit logs...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (claim) {
+    <!-- Claim Header Banner -->
+    <div class="claim-header-banner">
+      <div class="banner-left">
+        <div class="badges-row">
+          <span class="category-badge cat-{{ claim.claimCategory }}">{{ claim.claimCategory }}</span>
+          <span class="status-badge status-{{ claim.status }}">{{ claim.status.replace('_', ' ') }}</span>
+        </div>
+        <h2>Claim Dossier: {{ claim.claimNumber }}</h2>
+        <div class="meta-row">
+          <span>Submitted on {{ claim.createdAt | date:'mediumDate' }}</span>
+          <span>&bull;</span>
+          <span>Incident: {{ claim.incidentDate | date:'mediumDate' }}</span>
+          @if (claim.assignedOfficer) {
+            <span>&bull;</span>
+            <span>Assigned Officer: <strong>{{ claim.assignedOfficer.name }}</strong></span>
+          }
+        </div>
+      </div>
+
+      <div class="banner-right">
+        <div class="amount-badge">
+          <div class="amt-lbl">Claimed Amount</div>
+          <div class="amt-val">₹{{ claim.claimAmount | number:'1.0-0' }}</div>
+          @if (claim.approvedAmount) {
+            <div class="amt-approved">Approved: ₹{{ claim.approvedAmount | number:'1.0-0' }}</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (successMessage) {
+      <div class="alert alert-success mt-3">
+        <span class="material-icons">check_circle</span>
+        <span>{{ successMessage }}</span>
+      </div>
+    }
+
+    <div class="claim-layout-grid">
+      <!-- Left Column: Details, Documents & Timeline -->
+      <div class="left-col">
+        <!-- Incident & Policy Details -->
+        <div class="app-card mb-4">
+          <div class="card-header">
+            <h3>Incident Narrative & Associated Policy</h3>
+          </div>
+
+          <div class="info-grid">
+            <div class="ig-item">
+              <label>Policy Name</label>
+              <div class="ig-val"><strong>{{ claim.policy?.name }}</strong></div>
+            </div>
+            <div class="ig-item">
+              <label>Customer Policy No</label>
+              <div class="ig-val"><code>{{ claim.customerPolicy?.policyNumber }}</code></div>
+            </div>
+            <div class="ig-item">
+              <label>Policy Coverage Limit</label>
+              <div class="ig-val text-primary">₹{{ claim.customerPolicy?.coverageAmount | number:'1.0-0' }}</div>
+            </div>
+            <div class="ig-item">
+              <label>Active Policy Period</label>
+              <div class="ig-val">
+                {{ claim.customerPolicy?.startDate | date:'shortDate' }} to {{ claim.customerPolicy?.endDate | date:'shortDate' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="narrative-box">
+            <label>Incident Description:</label>
+            <p>{{ claim.description }}</p>
+          </div>
+
+          @if (claim.officerRemarks) {
+            <div class="remarks-box">
+              <label><span class="material-icons">notes</span> Officer Review Remarks:</label>
+              <p>{{ claim.officerRemarks }}</p>
+            </div>
+          }
+
+          @if (claim.rejectionReason) {
+            <div class="rejection-box">
+              <label><span class="material-icons">cancel</span> Official Rejection Grounds:</label>
+              <p>{{ claim.rejectionReason }}</p>
+            </div>
+          }
+
+          @if (claim.settledAt) {
+            <div class="settlement-box">
+              <span class="material-icons">price_check</span>
+              <div>
+                <strong>Claim Settled & Disbursed</strong>
+                <p>Settlement authorized on {{ claim.settledAt | date:'medium' }}. Payout sum: ₹{{ (claim.approvedAmount || claim.claimAmount) | number:'1.0-0' }}.</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Supporting Documents Section -->
+        <div class="app-card mb-4">
+          <div class="card-header">
+            <h3>Supporting Documentation & Evidence ({{ claim.documents?.length || 0 }})</h3>
+          </div>
+
+          @if (!claim.documents || claim.documents.length === 0) {
+            <div class="empty-state">
+              <span class="material-icons empty-icon">attach_file</span>
+              <p>No supporting documents uploaded for this claim.</p>
+            </div>
+          } @else {
+            <div class="docs-list">
+              @for (doc of claim.documents; track doc.id) {
+                <div class="doc-card">
+                  <div class="doc-icon">
+                    <span class="material-icons">
+                      {{ doc.mimeType.includes('pdf') ? 'picture_as_pdf' : 'image' }}
+                    </span>
+                  </div>
+                  <div class="doc-info">
+                    <div class="doc-name">{{ doc.originalName }}</div>
+                    <div class="doc-meta">
+                      {{ (doc.fileSize / 1024) | number:'1.0-0' }} KB &bull; Uploaded {{ doc.uploadedAt | date:'mediumDate' }}
+                    </div>
+                  </div>
+                  <div class="doc-actions">
+                    <button class="btn btn-secondary btn-sm" (click)="viewDocument(doc.id)" title="View in browser">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" (click)="downloadDocument(doc.id)" title="Download file">
+                      <span class="material-icons">download</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Upload Additional Docs (Customer upload when requested) -->
+          @if (authService.isCustomer() && claim.status === 'ADDITIONAL_DOCS_REQUIRED') {
+            <div class="additional-upload-box">
+              <div class="box-title">
+                <span class="material-icons text-warning">warning</span>
+                <strong>Action Required: Upload Requested Documents</strong>
+              </div>
+              <p>The verification officer has requested further proof. Please attach the required invoices or reports.</p>
+
+              <div class="file-picker-row">
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" (change)="onAdditionalFileSelected($event)" />
+              </div>
+
+              @if (additionalFiles.length > 0) {
+                <div class="picked-files">
+                  @for (f of additionalFiles; track f.name; let i = $index) {
+                    <div class="file-chip">
+                      <span>{{ f.name }}</span>
+                      <button type="button" (click)="removeAdditionalFile(i)">x</button>
+                    </div>
+                  }
+                  <button class="btn btn-primary btn-sm mt-2" [disabled]="isUploadingDocs" (click)="uploadAdditionalDocs()">
+                    @if (isUploadingDocs) { Uploading... } @else { Submit Additional Documents }
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Claim Status Workflow Audit Timeline -->
+        <div class="app-card">
+          <div class="card-header">
+            <h3>Chronological Claim Lifecycle & Audit Trail</h3>
+          </div>
+
+          <div class="timeline-wrapper">
+            @for (step of claim.statusHistory; track step.id; let last = $last) {
+              <div class="timeline-item" [class.latest]="last">
+                <div class="timeline-marker">
+                  <span class="material-icons">
+                    @if (step.newStatus === 'SUBMITTED') { forward_to_inbox }
+                    @else if (step.newStatus === 'UNDER_REVIEW') { rate_review }
+                    @else if (step.newStatus === 'ADDITIONAL_DOCS_REQUIRED') { contact_support }
+                    @else if (step.newStatus === 'APPROVED') { verified }
+                    @else if (step.newStatus === 'REJECTED') { cancel }
+                    @else { check_circle }
+                  </span>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-header">
+                    <span class="status-badge status-{{ step.newStatus }}">
+                      {{ step.newStatus.replace('_', ' ') }}
+                    </span>
+                    <span class="timeline-time">{{ step.createdAt | date:'medium' }}</span>
+                  </div>
+                  <div class="timeline-actor">
+                    Updated by: <strong>{{ step.changedBy?.name }}</strong> ({{ step.changedBy?.role }})
+                  </div>
+                  @if (step.remarks) {
+                    <p class="timeline-remarks">{{ step.remarks }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Staff Review & Officer Assignment Workbench -->
+      <div class="right-col">
+        <!-- Claimant Info -->
+        <div class="app-card mb-4">
+          <div class="card-header">
+            <h3>Claimant Profile</h3>
+          </div>
+          <div class="profile-summary">
+            <div class="prof-name">{{ claim.customer?.name }}</div>
+            <div class="prof-email">{{ claim.customer?.email }}</div>
+            <div class="prof-phone">{{ claim.customer?.phone || 'No phone provided' }}</div>
+            @if (claim.customer?.address) {
+              <div class="prof-addr">{{ claim.customer?.address }}</div>
+            }
+          </div>
+        </div>
+
+        <!-- Admin Claim Assignment Panel -->
+        @if (authService.isAdmin()) {
+          <div class="app-card mb-4">
+            <div class="card-header">
+              <h3>Assign Insurance Officer</h3>
+            </div>
+            <form [formGroup]="assignForm" (ngSubmit)="onAssignSubmit()">
+              <div class="form-group">
+                <label for="officerSelect">Assigned Officer</label>
+                <select id="officerSelect" class="form-control" formControlName="officerId">
+                  <option value="" disabled>-- Select Officer --</option>
+                  @for (off of officersList; track off.id) {
+                    <option [value]="off.id">{{ off.name }} ({{ off.email }})</option>
+                  }
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-sm" [disabled]="isActionLoading || assignForm.invalid">
+                <span class="material-icons">how_to_reg</span> Assign Claim
+              </button>
+            </form>
+          </div>
+        }
+
+        <!-- Officer / Admin Review Actions Panel -->
+        @if (authService.isOfficer() || authService.isAdmin()) {
+          <div class="app-card action-panel">
+            <div class="card-header">
+              <h3>Process Status Transition</h3>
+            </div>
+
+            <form [formGroup]="reviewForm" (ngSubmit)="onReviewSubmit()">
+              <div class="form-group">
+                <label for="targetStatus">Select New Status</label>
+                <select id="targetStatus" class="form-control" formControlName="targetStatus">
+                  <option value="UNDER_REVIEW">Move to Under Review</option>
+                  <option value="ADDITIONAL_DOCS_REQUIRED">Request Additional Documents</option>
+                  <option value="APPROVED">Approve Claim</option>
+                  <option value="REJECTED">Reject Claim</option>
+                  @if (authService.isAdmin()) {
+                    <option value="SETTLED">Mark Settled (Disbursed)</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Approved Amount input if APPROVED -->
+              @if (reviewForm.value.targetStatus === 'APPROVED') {
+                <div class="form-group">
+                  <label for="approvedAmount">Approved Payout Amount (₹)</label>
+                  <input
+                    id="approvedAmount"
+                    type="number"
+                    class="form-control"
+                    formControlName="approvedAmount"
+                  />
+                  <div class="form-hint">Claimed: ₹{{ claim.claimAmount | number:'1.0-0' }} &bull; Max Cover: ₹{{ claim.customerPolicy?.coverageAmount | number:'1.0-0' }}</div>
+                </div>
+              }
+
+              <!-- Rejection Reason if REJECTED -->
+              @if (reviewForm.value.targetStatus === 'REJECTED') {
+                <div class="form-group">
+                  <label for="rejectionReason">Mandatory Rejection Grounds *</label>
+                  <textarea
+                    id="rejectionReason"
+                    rows="3"
+                    class="form-control"
+                    placeholder="State detailed terms violation, exclusion, or missing documentation grounds"
+                    formControlName="rejectionReason"
+                  ></textarea>
+                </div>
+              }
+
+              <div class="form-group">
+                <label for="remarks">Audit Remarks / Notes *</label>
+                <textarea
+                  id="remarks"
+                  rows="3"
+                  class="form-control"
+                  placeholder="Internal audit notes & instructions"
+                  formControlName="remarks"
+                ></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" [disabled]="isActionLoading">
+                @if (isActionLoading) {
+                  Processing...
+                } @else {
+                  <span class="material-icons">check</span> Update Claim Status
+                }
+              </button>
+            </form>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

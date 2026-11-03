@@ -1,0 +1,110 @@
+.app-sidebar {
+  width: 250px;
+  background: var(--bg-sidebar);
+  color: var(--text-sidebar);
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+  &.collapsed {
+    width: 0;
+    transform: translateX(-100%);
+    overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    position: fixed;
+    z-index: 40;
+    height: calc(100vh - 64px);
+    box-shadow: var(--shadow-lg);
+
+    &:not(.collapsed) {
+      width: 260px;
+      transform: translateX(0);
+    }
+  }
+
+  .sidebar-section-title {
+    padding: 1.25rem 1.25rem 0.5rem;
+    font-size: 0.675rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-sidebar);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+
+      .nav-icon {
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.6);
+        transition: color 0.15s;
+      }
+
+      &:hover {
+        background: var(--bg-sidebar-hover);
+        color: #ffffff;
+        .nav-icon {
+          color: #ffffff;
+        }
+      }
+
+      &.active {
+        background: #1d4ed8;
+        color: #ffffff;
+        font-weight: 600;
+
+        .nav-icon {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    .academic-note {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      text-align: center;
+
+      .academic-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #93c5fd;
+      }
+
+      .academic-desc {
+        font-size: 0.68rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 0.2rem;
+      }
+    }
+  }
+}
+

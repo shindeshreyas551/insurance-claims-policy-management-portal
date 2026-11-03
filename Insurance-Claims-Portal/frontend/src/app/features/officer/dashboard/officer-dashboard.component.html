@@ -1,0 +1,168 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Insurance Officer Verification Workbench</h1>
+      <p>Assess assigned claims, inspect digital evidence, and record audit recommendations.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/claims" class="btn btn-primary">
+        <span class="material-icons">view_list</span> View Full Claims Queue
+      </a>
+      <a routerLink="/reports" class="btn btn-secondary">
+        <span class="material-icons">bar_chart</span> Claims Reports
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading assigned workflow tasks...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (dashboardData) {
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Total Assigned</div>
+          <div class="stat-value">{{ dashboardData.stats.totalAssigned }}</div>
+          <div class="stat-subtext">Assigned to your desk</div>
+        </div>
+        <div class="stat-icon blue">
+          <span class="material-icons">assignment_ind</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Under Active Review</div>
+          <div class="stat-value">{{ dashboardData.stats.underReview }}</div>
+          <div class="stat-subtext">Scrutiny underway</div>
+        </div>
+        <div class="stat-icon amber">
+          <span class="material-icons">pending_actions</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Awaiting Documents</div>
+          <div class="stat-value">{{ dashboardData.stats.additionalDocsRequired }}</div>
+          <div class="stat-subtext">Requested from customer</div>
+        </div>
+        <div class="stat-icon purple">
+          <span class="material-icons">contact_support</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Approved & Settled</div>
+          <div class="stat-value">{{ dashboardData.stats.approved }}</div>
+          <div class="stat-subtext">Validated claims</div>
+        </div>
+        <div class="stat-icon green">
+          <span class="material-icons">task_alt</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid-2">
+      <!-- Assigned Claims Queue -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Your Assigned Claims</h3>
+          <span class="badge">{{ dashboardData.recentlyProcessed.length }} Items</span>
+        </div>
+
+        @if (dashboardData.recentlyProcessed.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons empty-icon">assignment_turned_in</span>
+            <h3>No pending assigned claims</h3>
+            <p>You have verified all claims in your assigned queue.</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Claim No</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of dashboardData.recentlyProcessed; track c.id) {
+                  <tr>
+                    <td><strong>{{ c.claimNumber }}</strong></td>
+                    <td>{{ c.customer?.name }}</td>
+                    <td>₹{{ c.claimAmount | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="status-badge status-{{ c.status }}">
+                        {{ c.status.replace('_', ' ') }}
+                      </span>
+                    </td>
+                    <td>
+                      <a [routerLink]="['/claims', c.id]" class="btn btn-primary btn-sm">
+                        <span class="material-icons">rate_review</span> Review
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Unassigned Pool -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Unassigned Claims Pool</h3>
+          <span class="badge">{{ dashboardData.unassignedQueue.length }} Unclaimed</span>
+        </div>
+
+        @if (dashboardData.unassignedQueue.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons empty-icon">done_all</span>
+            <h3>No unassigned claims</h3>
+            <p>All newly filed claims have been assigned to an officer.</p>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Claim No</th>
+                  <th>Policy</th>
+                  <th>Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (u of dashboardData.unassignedQueue; track u.id) {
+                  <tr>
+                    <td><strong>{{ u.claimNumber }}</strong></td>
+                    <td>{{ u.policy?.name }}</td>
+                    <td>₹{{ u.claimAmount | number:'1.0-0' }}</td>
+                    <td>
+                      <button (click)="claimForReview(u.id)" class="btn btn-secondary btn-sm">
+                        <span class="material-icons">person_add</span> Claim & Review
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

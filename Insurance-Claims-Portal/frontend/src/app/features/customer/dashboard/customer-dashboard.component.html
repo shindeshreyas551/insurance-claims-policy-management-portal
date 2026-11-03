@@ -1,0 +1,199 @@
+<div class="page-container">
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>Welcome back, {{ user?.name }}! 👋</h2>
+      <p>Manage your active insurance portfolios, track claims status in real-time, or file a new reimbursement claim.</p>
+    </div>
+    <div class="welcome-actions">
+      <a routerLink="/claims/submit" class="btn btn-primary">
+        <span class="material-icons">add_circle</span> File New Claim
+      </a>
+      <a routerLink="/policies" class="btn btn-secondary">
+        <span class="material-icons">explore</span> Browse Policies
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading dashboard metrics from database...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (dashboardData) {
+    <!-- Metrics Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Active Policies</div>
+          <div class="stat-value">{{ dashboardData.stats.activePolicies }}</div>
+          <div class="stat-subtext">Currently covered</div>
+        </div>
+        <div class="stat-icon blue">
+          <span class="material-icons">shield</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Total Claims Filed</div>
+          <div class="stat-value">{{ dashboardData.stats.totalClaims }}</div>
+          <div class="stat-subtext">Lifetime claims</div>
+        </div>
+        <div class="stat-icon purple">
+          <span class="material-icons">description</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Pending Review</div>
+          <div class="stat-value">{{ dashboardData.stats.pendingClaims }}</div>
+          <div class="stat-subtext">In verification pipeline</div>
+        </div>
+        <div class="stat-icon amber">
+          <span class="material-icons">hourglass_top</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Settled / Disbursed</div>
+          <div class="stat-value">{{ dashboardData.stats.settledClaims }}</div>
+          <div class="stat-subtext">₹{{ dashboardData.stats.totalReceivedAmount | number:'1.0-0' }} disbursed</div>
+        </div>
+        <div class="stat-icon green">
+          <span class="material-icons">payments</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div class="quick-actions-row">
+      <a routerLink="/my-policies" class="quick-card">
+        <div class="qc-icon"><span class="material-icons">folder_shared</span></div>
+        <div class="qc-info">
+          <h4>My Active Policies</h4>
+          <p>Review validity period, sum insured, and policy documents.</p>
+        </div>
+        <span class="material-icons qc-arrow">chevron_right</span>
+      </a>
+
+      <a routerLink="/claims/submit" class="quick-card highlight">
+        <div class="qc-icon"><span class="material-icons">post_add</span></div>
+        <div class="qc-info">
+          <h4>File an Insurance Claim</h4>
+          <p>Submit hospitalization, accident, or property loss reimbursement.</p>
+        </div>
+        <span class="material-icons qc-arrow">chevron_right</span>
+      </a>
+
+      <a routerLink="/claims" class="quick-card">
+        <div class="qc-icon"><span class="material-icons">timeline</span></div>
+        <div class="qc-info">
+          <h4>Track Claims Status</h4>
+          <p>Inspect verification audit notes and officer recommendations.</p>
+        </div>
+        <span class="material-icons qc-arrow">chevron_right</span>
+      </a>
+    </div>
+
+    <!-- Tables Grid -->
+    <div class="grid-2">
+      <!-- Recent Claims -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Recent Claims Activity</h3>
+          <a routerLink="/claims" class="btn btn-secondary btn-sm">View All Claims</a>
+        </div>
+
+        @if (dashboardData.recentClaims.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons empty-icon">assignment_late</span>
+            <h3>No claims filed yet</h3>
+            <p>You haven't submitted any insurance claims. You can submit one whenever an eligible incident occurs.</p>
+            <a routerLink="/claims/submit" class="btn btn-primary btn-sm">Submit First Claim</a>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Claim No</th>
+                  <th>Policy</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of dashboardData.recentClaims; track c.id) {
+                  <tr>
+                    <td><strong>{{ c.claimNumber }}</strong></td>
+                    <td>{{ c.policy?.name }}</td>
+                    <td>₹{{ c.claimAmount | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="status-badge status-{{ c.status }}">
+                        {{ c.status.replace('_', ' ') }}
+                      </span>
+                    </td>
+                    <td>
+                      <a [routerLink]="['/claims', c.id]" class="btn btn-secondary btn-sm">Details</a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <!-- Recent Applications -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Policy Applications</h3>
+          <a routerLink="/policies" class="btn btn-secondary btn-sm">Browse More</a>
+        </div>
+
+        @if (dashboardData.recentApplications.length === 0) {
+          <div class="empty-state">
+            <span class="material-icons empty-icon">policy</span>
+            <h3>No pending applications</h3>
+            <p>Browse our 5 insurance categories and apply online today.</p>
+            <a routerLink="/policies" class="btn btn-primary btn-sm">Browse Policies</a>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>App No</th>
+                  <th>Policy</th>
+                  <th>Nominee</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (app of dashboardData.recentApplications; track app.id) {
+                  <tr>
+                    <td><strong>{{ app.applicationNumber }}</strong></td>
+                    <td>{{ app.policy?.name }}</td>
+                    <td>{{ app.nomineeName }} ({{ app.nomineeRelation }})</td>
+                    <td>
+                      <span class="status-badge status-{{ app.status }}">
+                        {{ app.status }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+

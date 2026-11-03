@@ -1,0 +1,166 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Policy Applications Underwriting Desk</h1>
+      <p>Assess submitted customer proposals, conduct eligibility evaluations, and issue digital policies.</p>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="status-pills">
+      <button class="status-pill" [class.active]="selectedStatusFilter === ''" (click)="filterByStatus('')">
+        All Applications
+      </button>
+      <button class="status-pill" [class.active]="selectedStatusFilter === 'PENDING'" (click)="filterByStatus('PENDING')">
+        Pending Underwriting
+      </button>
+      <button class="status-pill" [class.active]="selectedStatusFilter === 'APPROVED'" (click)="filterByStatus('APPROVED')">
+        Approved
+      </button>
+      <button class="status-pill" [class.active]="selectedStatusFilter === 'REJECTED'" (click)="filterByStatus('REJECTED')">
+        Rejected
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading application proposals...</p>
+    </div>
+  } @else if (applications.length === 0) {
+    <div class="empty-state app-card">
+      <span class="material-icons empty-icon">assignment_turned_in</span>
+      <h3>No applications found</h3>
+      <p>No customer applications currently match the selected underwriting filter.</p>
+    </div>
+  } @else {
+    <div class="table-responsive app-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Application No</th>
+            <th>Applicant</th>
+            <th>Policy & Category</th>
+            <th>Nominee Particulars</th>
+            <th>Annual Income</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of applications; track a.id) {
+            <tr>
+              <td>
+                <strong>{{ a.applicationNumber }}</strong>
+                <div class="text-muted text-small">{{ a.createdAt | date:'shortDate' }}</div>
+              </td>
+              <td>
+                <div class="font-bold">{{ a.customer?.name }}</div>
+                <div class="text-muted text-small">{{ a.customer?.email }}</div>
+              </td>
+              <td>
+                <div class="font-bold">{{ a.policy?.name }}</div>
+                <span class="category-badge cat-{{ a.policy?.category }}">{{ a.policy?.category }}</span>
+              </td>
+              <td>{{ a.nomineeName }} ({{ a.nomineeRelation }})</td>
+              <td>
+                @if (a.annualIncome) {
+                  ₹{{ a.annualIncome | number:'1.0-0' }}
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <span class="status-badge status-{{ a.status }}">{{ a.status }}</span>
+              </td>
+              <td>
+                @if (a.status === 'PENDING') {
+                  <button class="btn btn-primary btn-sm" (click)="openReview(a)">
+                    <span class="material-icons">rate_review</span> Review
+                  </button>
+                } @else {
+                  <span class="text-muted text-small">
+                    Issued: {{ a.customerPolicy?.policyNumber || 'N/A' }}
+                  </span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Review Modal -->
+  @if (selectedApp) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Review Application: {{ selectedApp.applicationNumber }}</h3>
+          <button class="close-btn" (click)="closeReview()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="app-recap-box">
+          <div class="recap-grid">
+            <div>
+              <label>Applicant:</label>
+              <strong>{{ selectedApp.customer?.name }} ({{ selectedApp.customer?.email }})</strong>
+            </div>
+            <div>
+              <label>Selected Policy:</label>
+              <strong>{{ selectedApp.policy?.name }}</strong>
+            </div>
+            <div>
+              <label>Coverage & Premium:</label>
+              <span>Cover: ₹{{ selectedApp.policy?.coverageAmount | number:'1.0-0' }} &bull; Premium: ₹{{ selectedApp.policy?.premiumAmount | number:'1.0-0' }}</span>
+            </div>
+            <div>
+              <label>Nominee:</label>
+              <span>{{ selectedApp.nomineeName }} ({{ selectedApp.nomineeRelation }})</span>
+            </div>
+          </div>
+          @if (selectedApp.existingConditions) {
+            <div class="disclosure-item">
+              <label>Applicant Disclosures / Asset Details:</label>
+              <p>{{ selectedApp.existingConditions }}</p>
+            </div>
+          }
+        </div>
+
+        <form [formGroup]="reviewForm" (ngSubmit)="onReviewSubmit()">
+          <div class="form-group">
+            <label for="revStatus">Underwriting Decision *</label>
+            <select id="revStatus" class="form-control" formControlName="status">
+              <option value="APPROVED">Approve & Issue Active Policy</option>
+              <option value="REJECTED">Reject Application</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="revRemarks">Audit Remarks & Underwriting Justification *</label>
+            <textarea id="revRemarks" rows="3" class="form-control" formControlName="remarks"></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeReview()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isProcessing || reviewForm.invalid">
+              @if (isProcessing) { Processing... } @else { Finalize Underwriting Decision }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+

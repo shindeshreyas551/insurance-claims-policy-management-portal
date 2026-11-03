@@ -1,0 +1,158 @@
+<div class="page-container">
+  <div class="mb-3">
+    <a [routerLink]="['/policies', policy?.id]" class="back-link">
+      <span class="material-icons">arrow_back</span> Back to Policy Details
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading application form...</p>
+    </div>
+  } @else if (policy) {
+    <div class="apply-layout">
+      <div class="app-card form-card">
+        <div class="card-header">
+          <div>
+            <h2>Insurance Policy Application</h2>
+            <p>Complete your nominee and financial disclosures to proceed with underwriting.</p>
+          </div>
+          <span class="category-badge cat-{{ policy.category }}">{{ policy.category }}</span>
+        </div>
+
+        @if (successMessage) {
+          <div class="alert alert-success">
+            <span class="material-icons">check_circle</span>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="alert alert-danger">
+            <span class="material-icons">error_outline</span>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <form [formGroup]="applyForm" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nomineeName">Nominee Full Name *</label>
+              <input
+                id="nomineeName"
+                type="text"
+                class="form-control"
+                placeholder="Beneficiary legal name"
+                formControlName="nomineeName"
+              />
+              @if (applyForm.get('nomineeName')?.touched && applyForm.get('nomineeName')?.errors?.['required']) {
+                <div class="form-error">Nominee name is required.</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="nomineeRelation">Relationship to Insured *</label>
+              <select id="nomineeRelation" class="form-control" formControlName="nomineeRelation">
+                @for (rel of relations; track rel) {
+                  <option [value]="rel">{{ rel }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="annualIncome">Applicant Annual Income (₹) *</label>
+            <input
+              id="annualIncome"
+              type="number"
+              class="form-control"
+              placeholder="e.g. 750000"
+              formControlName="annualIncome"
+            />
+            @if (applyForm.get('annualIncome')?.touched && applyForm.get('annualIncome')?.errors?.['required']) {
+              <div class="form-error">Annual income is required for underwriting.</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="existingConditions">Existing Medical History / Asset Registration Details</label>
+            <textarea
+              id="existingConditions"
+              rows="3"
+              class="form-control"
+              placeholder="Specify any pre-existing health conditions, or vehicle registration / property address"
+              formControlName="existingConditions"
+            ></textarea>
+            <div class="form-hint">For Vehicle insurance: enter vehicle make/model/reg. For Health: disclose pre-existing illness if any.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="remarks">Special Requests or Remarks (Optional)</label>
+            <input
+              id="remarks"
+              type="text"
+              class="form-control"
+              placeholder="Any additional information"
+              formControlName="remarks"
+            />
+          </div>
+
+          <div class="declaration-box">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="declaration" />
+              <span>
+                I hereby declare that all information furnished above is accurate, complete, and true to the best of my knowledge. I understand that misrepresentation voids coverage under policy terms.
+              </span>
+            </label>
+            @if (applyForm.get('declaration')?.touched && applyForm.get('declaration')?.errors?.['required']) {
+              <div class="form-error mt-1">You must accept the legal declaration to apply.</div>
+            }
+          </div>
+
+          <div class="form-actions">
+            <a [routerLink]="['/policies', policy.id]" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+              @if (isSubmitting) {
+                <span class="spinner-small"></span> Submitting...
+              } @else {
+                <span class="material-icons">send</span> Submit Application
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Policy Recap Sidebar -->
+      <div class="app-card recap-card">
+        <h3>Selected Plan</h3>
+        <div class="recap-name">{{ policy.name }}</div>
+        <div class="recap-id">{{ policy.policyNumber }}</div>
+
+        <div class="recap-list">
+          <div class="recap-row">
+            <span>Coverage Amount</span>
+            <strong>₹{{ policy.coverageAmount | number:'1.0-0' }}</strong>
+          </div>
+          <div class="recap-row">
+            <span>Premium Amount</span>
+            <strong>₹{{ policy.premiumAmount | number:'1.0-0' }} / yr</strong>
+          </div>
+          <div class="recap-row">
+            <span>Tenure</span>
+            <strong>{{ policy.durationMonths }} Months</strong>
+          </div>
+        </div>
+
+        <div class="security-guarantee">
+          <span class="material-icons">verified_user</span>
+          <div>
+            <strong>Instant Processing</strong>
+            <p>Admin will review your KYC and issue your digital policy upon approval.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

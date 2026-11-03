@@ -1,0 +1,35 @@
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    height: 340px;
+    display: flex;
+    flex-direction: column;
+
+    .chart-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 240px;
+    }
+  }
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.text-truncate {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

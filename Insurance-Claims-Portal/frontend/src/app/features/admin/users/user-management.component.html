@@ -1,0 +1,153 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>User & Access Governance</h1>
+      <p>Supervise user accounts across Customer, Officer, and Administrator tiers.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">person_add</span> Create Staff User
+      </button>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
+  <!-- Controls -->
+  <div class="filter-bar">
+    <div class="role-pills">
+      <button class="role-pill" [class.active]="selectedRoleFilter === ''" (click)="filterRole('')">All Users</button>
+      <button class="role-pill" [class.active]="selectedRoleFilter === 'CUSTOMER'" (click)="filterRole('CUSTOMER')">Customers</button>
+      <button class="role-pill" [class.active]="selectedRoleFilter === 'OFFICER'" (click)="filterRole('OFFICER')">Officers</button>
+      <button class="role-pill" [class.active]="selectedRoleFilter === 'ADMIN'" (click)="filterRole('ADMIN')">Admins</button>
+    </div>
+
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by name, email, phone..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="applyFilter()"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading user database...</p>
+    </div>
+  } @else {
+    <div class="table-responsive app-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User Particulars</th>
+            <th>Role</th>
+            <th>Contact Phone</th>
+            <th>Active Policies</th>
+            <th>Claims</th>
+            <th>Account Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of filteredUsers; track u.id) {
+            <tr>
+              <td>
+                <div class="font-bold">{{ u.name }}</div>
+                <div class="text-muted text-small">{{ u.email }}</div>
+              </td>
+              <td>
+                <span class="status-badge role-{{ u.role }}">{{ u.role }}</span>
+              </td>
+              <td>{{ u.phone || '—' }}</td>
+              <td>{{ u._count?.customerPolicies || 0 }}</td>
+              <td>{{ u._count?.claims || 0 }}</td>
+              <td>
+                <span class="status-badge" [class.status-ACTIVE]="u.isActive" [class.status-EXPIRED]="!u.isActive">
+                  {{ u.isActive ? 'Active' : 'Disabled' }}
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm"
+                  [class.btn-danger]="u.isActive"
+                  [class.btn-secondary]="!u.isActive"
+                  (click)="toggleActive(u.id)"
+                >
+                  {{ u.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Create Staff Modal -->
+  @if (showCreateModal) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Staff Account</h3>
+          <button class="close-btn" (click)="closeCreateModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="uName">Staff Member Name *</label>
+            <input id="uName" type="text" class="form-control" formControlName="name" placeholder="Full name" />
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="uEmail">Email Address *</label>
+              <input id="uEmail" type="email" class="form-control" formControlName="email" placeholder="staff@insurance.portal" />
+            </div>
+
+            <div class="form-group">
+              <label for="uRole">Assign Role *</label>
+              <select id="uRole" class="form-control" formControlName="role">
+                <option value="OFFICER">Insurance Officer</option>
+                <option value="ADMIN">System Administrator</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="uPass">Initial Password *</label>
+            <input id="uPass" type="password" class="form-control" formControlName="password" placeholder="At least 6 characters" />
+          </div>
+
+          <div class="form-group">
+            <label for="uPhone">Phone Number</label>
+            <input id="uPhone" type="text" class="form-control" formControlName="phone" placeholder="+91 ..." />
+          </div>
+
+          <div class="form-group">
+            <label for="uAddr">Office / Branch Location</label>
+            <input id="uAddr" type="text" class="form-control" formControlName="address" placeholder="e.g. Pune Regional Hub" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isCreating || userForm.invalid">
+              @if (isCreating) { Creating... } @else { Create Staff User }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,104 @@
+<header class="app-navbar">
+  <div class="navbar-left">
+    <button class="menu-toggle-btn" (click)="toggleSidebar.emit()" title="Toggle Sidebar">
+      <span class="material-icons">menu</span>
+    </button>
+    <a routerLink="/" class="navbar-brand">
+      <div class="brand-logo">
+        <span class="material-icons">shield</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">SecureGuard</span>
+        <span class="brand-subtitle">Insurance Claims & Policy Portal</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="navbar-right">
+    @if (authService.isAuthenticated() && currentUser) {
+      <!-- Notification Bell -->
+      <div class="nav-dropdown-wrapper">
+        <button class="nav-icon-btn" (click)="toggleNotifications()" title="Notifications">
+          <span class="material-icons">notifications</span>
+          @if (unreadCount > 0) {
+            <span class="notification-badge">{{ unreadCount }}</span>
+          }
+        </button>
+
+        @if (showNotificationMenu) {
+          <div class="dropdown-menu notifications-dropdown">
+            <div class="dropdown-header">
+              <h4>Notifications</h4>
+              @if (unreadCount > 0) {
+                <button class="btn-text" (click)="markAllAsRead()">Mark all read</button>
+              }
+            </div>
+            <div class="notification-list">
+              @if (notifications.length === 0) {
+                <div class="empty-notif">No new notifications</div>
+              } @else {
+                @for (n of notifications; track n.id) {
+                  <div class="notif-item" [class.unread]="!n.isRead" (click)="markAsRead(n.id, n.link)">
+                    <div class="notif-icon" [ngClass]="n.type.toLowerCase()">
+                      <span class="material-icons">
+                        @if (n.type === 'SUCCESS') { check_circle }
+                        @else if (n.type === 'WARNING') { warning }
+                        @else if (n.type === 'ERROR') { error }
+                        @else { info }
+                      </span>
+                    </div>
+                    <div class="notif-content">
+                      <div class="notif-title">{{ n.title }}</div>
+                      <div class="notif-msg">{{ n.message }}</div>
+                      <div class="notif-time">{{ n.createdAt | date:'short' }}</div>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+            <div class="dropdown-footer">
+              <a routerLink="/notifications" (click)="showNotificationMenu = false">View all notifications</a>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- User Menu -->
+      <div class="nav-dropdown-wrapper">
+        <button class="user-profile-btn" (click)="toggleUser()">
+          <div class="avatar">
+            {{ currentUser.name.charAt(0) }}
+          </div>
+          <div class="user-meta">
+            <span class="user-name">{{ currentUser.name }}</span>
+            <span class="user-role-badge role-{{ currentUser.role }}">{{ currentUser.role }}</span>
+          </div>
+          <span class="material-icons arrow-icon">arrow_drop_down</span>
+        </button>
+
+        @if (showUserMenu) {
+          <div class="dropdown-menu user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="meta-name">{{ currentUser.name }}</div>
+              <div class="meta-email">{{ currentUser.email }}</div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a routerLink="/profile" class="dropdown-item" (click)="showUserMenu = false">
+              <span class="material-icons">person</span> Profile Settings
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item text-danger" (click)="logout()">
+              <span class="material-icons">logout</span> Logout
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="auth-buttons">
+        <a routerLink="/auth/login" class="btn btn-secondary btn-sm">Login</a>
+        <a routerLink="/auth/register" class="btn btn-primary btn-sm">Register</a>
+      </div>
+    }
+  </div>
+</header>
+

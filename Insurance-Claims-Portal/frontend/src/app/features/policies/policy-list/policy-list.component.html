@@ -1,0 +1,112 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Insurance Policy Catalog</h1>
+      <p>Explore comprehensive policies across Health, Life, Vehicle, Home, and Travel domains.</p>
+    </div>
+    @if (authService.isAdmin()) {
+      <div class="header-actions">
+        <a routerLink="/admin/policies" class="btn btn-primary">
+          <span class="material-icons">settings</span> Manage Policies
+        </a>
+      </div>
+    }
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="filter-bar">
+    <div class="category-pills">
+      @for (cat of categories; track cat.label) {
+        <button
+          type="button"
+          class="cat-pill"
+          [class.active]="selectedCategory === cat.value"
+          (click)="selectCategory(cat.value)"
+        >
+          {{ cat.label }}
+        </button>
+      }
+    </div>
+
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Search by plan name, coverage keyword..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()"
+      />
+      @if (searchTerm) {
+        <button class="clear-btn" (click)="searchTerm = ''; onSearch()">
+          <span class="material-icons">close</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading insurance catalog...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (filteredPolicies.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons empty-icon">search_off</span>
+      <h3>No matching insurance policies found</h3>
+      <p>Try resetting the category filter or searching with different keywords.</p>
+      <button class="btn btn-secondary btn-sm" (click)="selectedCategory = ''; searchTerm = ''; applyFilter()">
+        Reset Filters
+      </button>
+    </div>
+  } @else {
+    <div class="policies-grid">
+      @for (p of filteredPolicies; track p.id) {
+        <div class="policy-card">
+          <div class="card-top">
+            <span class="category-badge cat-{{ p.category }}">{{ p.category }}</span>
+            <span class="policy-code">{{ p.policyNumber }}</span>
+          </div>
+
+          <h3 class="policy-name">{{ p.name }}</h3>
+          <p class="policy-desc">{{ p.description }}</p>
+
+          <div class="policy-financials">
+            <div class="fin-item">
+              <span class="fin-label">Coverage Sum</span>
+              <span class="fin-val highlight">₹{{ p.coverageAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="fin-divider"></div>
+            <div class="fin-item">
+              <span class="fin-label">Annual Premium</span>
+              <span class="fin-val">₹{{ p.premiumAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="fin-divider"></div>
+            <div class="fin-item">
+              <span class="fin-label">Duration</span>
+              <span class="fin-val">{{ p.durationMonths }} Mo</span>
+            </div>
+          </div>
+
+          <div class="eligibility-snippet">
+            <span class="material-icons">info</span>
+            <span><strong>Eligibility:</strong> {{ p.eligibility }}</span>
+          </div>
+
+          <div class="card-actions">
+            <a [routerLink]="['/policies', p.id]" class="btn btn-secondary btn-sm">
+              <span class="material-icons">visibility</span> Details
+            </a>
+            @if (authService.isCustomer() || !authService.isAuthenticated()) {
+              <a [routerLink]="['/policies', p.id, 'apply']" class="btn btn-primary btn-sm">
+                <span class="material-icons">how_to_reg</span> Apply Now
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+

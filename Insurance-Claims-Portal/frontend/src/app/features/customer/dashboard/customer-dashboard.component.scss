@@ -1,0 +1,108 @@
+.welcome-banner {
+  background: linear-gradient(135deg, #0f2b48 0%, #1e3a8a 100%);
+  color: #ffffff;
+  padding: 2rem 2.25rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+
+  .welcome-text {
+    max-width: 650px;
+    h2 {
+      font-size: 1.65rem;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+    }
+    p {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  }
+
+  .welcome-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+.quick-actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue);
+    }
+
+    &.highlight {
+      border-color: #93c5fd;
+      background: #f8fafc;
+      .qc-icon {
+        background: #1d4ed8;
+        color: #ffffff;
+      }
+    }
+
+    .qc-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .material-icons {
+        font-size: 24px;
+      }
+    }
+
+    .qc-info {
+      flex: 1;
+      h4 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--primary-navy);
+      }
+      p {
+        font-size: 0.775rem;
+        color: var(--text-muted);
+        margin-top: 0.15rem;
+        line-height: 1.35;
+      }
+    }
+
+    .qc-arrow {
+      color: var(--text-light);
+    }
+  }
+}
+

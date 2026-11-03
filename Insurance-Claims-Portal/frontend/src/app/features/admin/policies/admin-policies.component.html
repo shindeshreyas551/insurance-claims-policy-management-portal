@@ -1,0 +1,146 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Insurance Policies Management</h1>
+      <p>Configure product lines, establish coverage criteria, and control market availability.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span class="material-icons">add</span> Create New Policy
+      </button>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading policies repository...</p>
+    </div>
+  } @else {
+    <div class="table-responsive app-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Policy Code</th>
+            <th>Name & Description</th>
+            <th>Category</th>
+            <th>Coverage Limit</th>
+            <th>Annual Premium</th>
+            <th>Tenure</th>
+            <th>Active Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of policies; track p.id) {
+            <tr>
+              <td><code>{{ p.policyNumber }}</code></td>
+              <td>
+                <div class="font-bold">{{ p.name }}</div>
+                <div class="text-muted text-small">{{ p.description | slice:0:60 }}...</div>
+              </td>
+              <td><span class="category-badge cat-{{ p.category }}">{{ p.category }}</span></td>
+              <td><strong>₹{{ p.coverageAmount | number:'1.0-0' }}</strong></td>
+              <td>₹{{ p.premiumAmount | number:'1.0-0' }}</td>
+              <td>{{ p.durationMonths }} Mo</td>
+              <td>
+                <span class="status-badge" [class.status-ACTIVE]="p.isActive" [class.status-EXPIRED]="!p.isActive">
+                  {{ p.isActive ? 'Active' : 'Deactivated' }}
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm"
+                  [class.btn-danger]="p.isActive"
+                  [class.btn-secondary]="!p.isActive"
+                  (click)="toggleStatus(p.id)"
+                >
+                  {{ p.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Create Modal -->
+  @if (showCreateModal) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Insurance Policy</h3>
+          <button class="close-btn" (click)="closeCreateModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="policyForm" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="pName">Policy Name *</label>
+              <input id="pName" type="text" class="form-control" formControlName="name" placeholder="Plan name" />
+            </div>
+
+            <div class="form-group">
+              <label for="pCat">Category *</label>
+              <select id="pCat" class="form-control" formControlName="category">
+                @for (c of categories; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pDesc">Description *</label>
+            <textarea id="pDesc" rows="2" class="form-control" formControlName="description"></textarea>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label for="pCov">Coverage Sum (₹) *</label>
+              <input id="pCov" type="number" class="form-control" formControlName="coverageAmount" />
+            </div>
+
+            <div class="form-group">
+              <label for="pPrem">Premium (₹) *</label>
+              <input id="pPrem" type="number" class="form-control" formControlName="premiumAmount" />
+            </div>
+
+            <div class="form-group">
+              <label for="pDur">Duration (Months) *</label>
+              <input id="pDur" type="number" class="form-control" formControlName="durationMonths" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pElig">Eligibility Criteria *</label>
+            <input id="pElig" type="text" class="form-control" formControlName="eligibility" />
+          </div>
+
+          <div class="form-group">
+            <label for="pTerms">Terms and Conditions *</label>
+            <textarea id="pTerms" rows="3" class="form-control" formControlName="termsAndConditions"></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving || policyForm.invalid">
+              @if (isSaving) { Saving... } @else { Save & Publish Policy }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+

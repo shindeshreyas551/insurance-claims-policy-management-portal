@@ -1,0 +1,205 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>Executive Administrative Dashboard</h1>
+      <p>System-wide health monitoring, real-time claims audit analytics, and portfolio governance.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/reports" class="btn btn-primary">
+        <span class="material-icons">file_download</span> Generate & Export CSV
+      </a>
+      <a routerLink="/admin/applications" class="btn btn-secondary">
+        <span class="material-icons">assignment</span> Applications Review
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Aggregating database analytics...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  } @else if (dashboardData) {
+    <!-- Metrics Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Total Customers</div>
+          <div class="stat-value">{{ dashboardData.stats.totalCustomers }}</div>
+          <div class="stat-subtext">Registered policyholders</div>
+        </div>
+        <div class="stat-icon blue">
+          <span class="material-icons">groups</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Insurance Officers</div>
+          <div class="stat-value">{{ dashboardData.stats.totalOfficers }}</div>
+          <div class="stat-subtext">Assessment staff</div>
+        </div>
+        <div class="stat-icon purple">
+          <span class="material-icons">badge</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Active Policies Issued</div>
+          <div class="stat-value">{{ dashboardData.stats.activeCustomerPolicies }}</div>
+          <div class="stat-subtext">{{ dashboardData.stats.totalPolicies }} catalog plans</div>
+        </div>
+        <div class="stat-icon green">
+          <span class="material-icons">verified_user</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Total Claims Count</div>
+          <div class="stat-value">{{ dashboardData.stats.totalClaims }}</div>
+          <div class="stat-subtext">{{ dashboardData.stats.pendingClaims }} pending action</div>
+        </div>
+        <div class="stat-icon amber">
+          <span class="material-icons">receipt_long</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Total Claimed Value</div>
+          <div class="stat-value">₹{{ dashboardData.stats.totalClaimedAmount | number:'1.0-0' }}</div>
+          <div class="stat-subtext">Cumulative demand</div>
+        </div>
+        <div class="stat-icon rose">
+          <span class="material-icons">account_balance_wallet</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <div class="stat-label">Settled Payouts</div>
+          <div class="stat-value">₹{{ dashboardData.stats.totalSettledAmount | number:'1.0-0' }}</div>
+          <div class="stat-subtext">Funds successfully credited</div>
+        </div>
+        <div class="stat-icon teal">
+          <span class="material-icons">price_check</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Grid (4 Interactive Chart.js Visualizations) -->
+    <div class="charts-grid">
+      <!-- 1. Monthly Claims Trend -->
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <h3>Monthly Claims Inflow (Last 6 Months)</h3>
+        </div>
+        <div class="chart-wrapper">
+          <canvas #monthlyChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- 2. Status Distribution Doughnut -->
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <h3>Claims Status Breakdown</h3>
+        </div>
+        <div class="chart-wrapper">
+          <canvas #statusChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- 3. Policy Category Distribution -->
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <h3>Claims by Insurance Category</h3>
+        </div>
+        <div class="chart-wrapper">
+          <canvas #categoryChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- 4. Monthly Claim Amount vs Settled -->
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <h3>Claimed vs Settled Amounts (₹)</h3>
+        </div>
+        <div class="chart-wrapper">
+          <canvas #amountChartCanvas></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent System Audit Trail & Recent Claims -->
+    <div class="grid-2 mt-4">
+      <!-- Recent Claims -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Recent Claims Registered</h3>
+          <a routerLink="/claims" class="btn btn-secondary btn-sm">All Claims</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Claim No</th>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of dashboardData.recentClaims; track c.id) {
+                <tr>
+                  <td><strong>{{ c.claimNumber }}</strong></td>
+                  <td>{{ c.customer?.name }}</td>
+                  <td><span class="category-badge cat-{{ c.claimCategory }}">{{ c.claimCategory }}</span></td>
+                  <td>₹{{ c.claimAmount | number:'1.0-0' }}</td>
+                  <td><span class="status-badge status-{{ c.status }}">{{ c.status.replace('_', ' ') }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Audit Logs -->
+      <div class="app-card">
+        <div class="card-header">
+          <h3>Security & Operational Audit Logs</h3>
+          <a routerLink="/admin/audit-logs" class="btn btn-secondary btn-sm">Full Log</a>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Details</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of dashboardData.recentAuditLogs; track log.id) {
+                <tr>
+                  <td>{{ log.user?.name || 'System' }}</td>
+                  <td><code>{{ log.action }}</code></td>
+                  <td>{{ log.entity }}</td>
+                  <td class="text-truncate">{{ log.details }}</td>
+                  <td class="text-muted">{{ log.createdAt | date:'shortTime' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
